@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIFAR-10 Classifier</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(180deg, #f5f7fb 0%, #e8eef7 100%);
+            color: #1f2937;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 24px;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
+            padding: 24px;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 2rem;
+        }
+
+        p {
+            line-height: 1.6;
+        }
+
+        button {
+            background: #2563eb;
+            border: none;
+            border-radius: 10px;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 12px 18px;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .result {
+            display: grid;
+            gap: 20px;
+            margin-top: 24px;
+        }
+
+        .image-frame {
+            align-items: center;
+            background: #f8fafc;
+            border: 4px solid #cbd5e1;
+            border-radius: 14px;
+            display: flex;
+            justify-content: center;
+            min-height: 280px;
+            transition: border-color 0.2s ease;
+        }
+
+        .image-frame.correct {
+            border-color: #16a34a;
+        }
+
+        .image-frame.incorrect {
+            border-color: #dc2626;
+        }
+
+        #image {
+            display: none;
+            height: 256px;
+            image-rendering: pixelated;
+            width: 256px;
+        }
+
+        .labels {
+            display: grid;
+            gap: 12px;
+        }
+
+        .label-row {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 12px 14px;
+        }
+
+        .confidence-bar {
+            background: #dbeafe;
+            border-radius: 999px;
+            height: 16px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .confidence-fill {
+            background: #2563eb;
+            height: 100%;
+            transition: width 0.2s ease;
+            width: 0%;
+        }
+
+        @media (min-width: 720px) {
+            .result {
+                align-items: start;
+                grid-template-columns: 300px 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>CIFAR-10 Random Prediction</h1>
+            <p>Click the button to fetch a random CIFAR-10 test image and see the CNN prediction in real time.</p>
+            <button type="button" onclick="getPrediction()">Get Random Prediction</button>
+
+            <div class="result">
+                <div id="image-frame" class="image-frame">
+                    <img id="image" alt="CIFAR-10 prediction">
+                </div>
+
+                <div class="labels">
+                    <div class="label-row"><strong>True label:</strong> <span id="true-label">-</span></div>
+                    <div class="label-row"><strong>Predicted label:</strong> <span id="predicted-label">-</span></div>
+                    <div class="label-row"><strong>Confidence:</strong> <span id="confidence">-</span></div>
+                    <div class="label-row">
+                        <strong>Confidence bar</strong>
+                        <div class="confidence-bar">
+                            <div id="confidence-fill" class="confidence-fill"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function getPrediction() {
+            const res = await fetch('/predict');
+            const data = await res.json();
+            document.getElementById('image').src = 'data:image/png;base64,' + data.image_base64;
+            document.getElementById('true-label').textContent = data.true_label;
+            document.getElementById('predicted-label').textContent = data.predicted_label;
+            document.getElementById('confidence').textContent = data.confidence.toFixed(1) + '%';
+
+            const imageElement = document.getElementById('image');
+            const imageFrame = document.getElementById('image-frame');
+            const confidenceFill = document.getElementById('confidence-fill');
+            const isCorrect = data.true_label === data.predicted_label;
+
+            imageElement.style.display = 'block';
+            imageFrame.classList.remove('correct', 'incorrect');
+            imageFrame.classList.add(isCorrect ? 'correct' : 'incorrect');
+            confidenceFill.style.width = data.confidence.toFixed(1) + '%';
+        }
+    </script>
+</body>
+</html>
